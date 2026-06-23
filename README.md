@@ -49,6 +49,7 @@ docker compose -f compose.yaml up -d --build
 この構成では、コンテナが `~/.claude` を読み取り専用で参照して、5 分ごとに transcript を集計して送信します。ホストごとの識別が必要なら `CLAUDE_USAGE_HOST_LABEL` を明示的に入れてください。
 `CLAUDE_USAGE_HOST_LABEL` と `CLAUDE_USAGE_USER_LABEL` は必須です。未設定だとスクリプトは失敗します。
 差分送信用の state は `~/.claude-usage-state` を永続 volume として保持します。
+初回だけホスト側で `mkdir -p /Users/user/.claude-usage-state` を実行しておくと安全です。
 
 ### 4. Cloudflare D1 に入れる
 
@@ -56,7 +57,10 @@ docker compose -f compose.yaml up -d --build
 
 1. `scripts/deploy-cloudflare.sh` を実行して migration と deploy をまとめて行う
 2. 必要なら `CLOUDFLARE_INGEST_TOKEN` を設定して Worker 側の `INGEST_TOKEN` を登録する
-3. Worker の URL を `CLAUDE_USAGE_INGEST_URL` に設定する
+3. 必要なら `CLOUDFLARE_DASHBOARD_PASSWORD` を設定して Worker 側のダッシュボード認証を有効にする
+4. Worker の URL を `CLAUDE_USAGE_INGEST_URL` に設定する
+
+ダッシュボード認証を有効にした場合、ブラウザで `GET /` を開くと Basic Auth を求められます。ユーザー名は任意、パスワードは `DASHBOARD_PASSWORD` です。
 
 このリポジトリでは D1 ID `f7853ec3-fee0-4823-992f-5162b5d4e15e` を前提にしています。
 ダッシュボードは Worker の `GET /` で見られます。集計 JSON は `GET /api/usage/series?days=30` です。

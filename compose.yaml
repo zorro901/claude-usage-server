@@ -1,5 +1,7 @@
+name: claude-usage-server
 services:
   claude-usage-report:
+    container_name: claude-usage-report
     build: .
     environment:
       CLAUDE_USAGE_INGEST_URL: ${CLAUDE_USAGE_INGEST_URL:-}
@@ -10,3 +12,4 @@ services:
     volumes:
       - ${HOME}/.claude:/claude-home:ro
       - ${HOME}/.claude-usage-state:/state
+    restart: unless-stopped

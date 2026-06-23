@@ -8,6 +8,7 @@ Usage:
 
 Environment:
   CLOUDFLARE_INGEST_TOKEN   Optional Worker secret value for INGEST_TOKEN.
+  CLOUDFLARE_DASHBOARD_PASSWORD Optional Worker secret value for DASHBOARD_PASSWORD.
   CLOUDFLARE_WRANGLER_BIN   Wrangler command to run (defaults to npx wrangler).
 EOF
 }
@@ -34,6 +35,11 @@ $wrangler_bin d1 migrations apply claude_usage --remote
 if [[ -n "${CLOUDFLARE_INGEST_TOKEN:-}" ]]; then
   echo "Updating INGEST_TOKEN secret..."
   printf '%s' "$CLOUDFLARE_INGEST_TOKEN" | $wrangler_bin secret put INGEST_TOKEN
+fi
+
+if [[ -n "${CLOUDFLARE_DASHBOARD_PASSWORD:-}" ]]; then
+  echo "Updating DASHBOARD_PASSWORD secret..."
+  printf '%s' "$CLOUDFLARE_DASHBOARD_PASSWORD" | $wrangler_bin secret put DASHBOARD_PASSWORD
 fi
 
 echo "Deploying Worker..."

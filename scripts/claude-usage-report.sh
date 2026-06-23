@@ -127,10 +127,23 @@ if [[ "$scan_transcripts" == "1" ]]; then
     while IFS= read -r -d '' file; do
       usage_json="$(
         jq -cs '
+          def zero:
+            {
+              input_tokens: 0,
+              output_tokens: 0,
+              cache_creation_input_tokens: 0,
+              cache_read_input_tokens: 0
+            };
+          def add_usage($u):
+            .input_tokens += ($u.input_tokens // 0)
+            | .output_tokens += ($u.output_tokens // 0)
+            | .cache_creation_input_tokens += ($u.cache_creation_input_tokens // 0)
+            | .cache_read_input_tokens += ($u.cache_read_input_tokens // 0);
           [ .[]
-            | select(type == "object" and .usage? != null)
-            | .usage
-          ] | if length > 0 then last else empty end
+            | select(type == "object")
+            | (.message.usage? // .usage? // empty)
+          ]
+          | if length > 0 then reduce .[] as $u (zero; add_usage($u)) else empty end
         ' "$file" 2>/dev/null || true
       )"
 

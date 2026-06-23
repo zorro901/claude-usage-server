@@ -24,6 +24,44 @@ function bearerToken(request) {
   return header.startsWith(prefix) ? header.slice(prefix.length) : "";
 }
 
+function basicAuthPassword(request) {
+  const header = request.headers.get("authorization") || "";
+  const prefix = "Basic ";
+  if (!header.startsWith(prefix)) {
+    return null;
+  }
+  try {
+    const decoded = atob(header.slice(prefix.length));
+    const separator = decoded.indexOf(":");
+    if (separator < 0) {
+      return null;
+    }
+    return decoded.slice(separator + 1);
+  } catch {
+    return null;
+  }
+}
+
+function dashboardAuthHeaders() {
+  return {
+    "WWW-Authenticate": 'Basic realm="Claude Usage Dashboard", charset="UTF-8"',
+  };
+}
+
+function requireDashboardAuth(request, env) {
+  if (!env.DASHBOARD_PASSWORD) {
+    return null;
+  }
+  const password = basicAuthPassword(request);
+  if (password !== env.DASHBOARD_PASSWORD) {
+    return new Response("Unauthorized", {
+      status: 401,
+      headers: dashboardAuthHeaders(),
+    });
+  }
+  return null;
+}
+
 function toInt(value) {
   if (value === null || value === undefined || value === "") return null;
   const num = Number(value);
@@ -347,11 +385,19 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
 
-    if (url.pathname === "/") {
+    if (request.method === "GET" && url.pathname === "/") {
+      const auth = requireDashboardAuth(request, env);
+      if (auth) {
+        return auth;
+      }
       return html(dashboardHtml());
     }
 
-    if (url.pathname === "/api/usage/series") {
+    if (request.method === "GET" && url.pathname === "/api/usage/series") {
+      const auth = requireDashboardAuth(request, env);
+      if (auth) {
+        return auth;
+      }
       const days = url.searchParams.get("days") || "30";
       return json(await readSeries(env, days));
     }
@@ -375,10 +421,18 @@ export default {
       return new Response("Invalid JSON", { status: 400 });
     }
 
-    if (!payload?.current_session?.host_label && !payload?.transcript_summary?.host_label) {
+    if (
+      !payload?.current_session?.host_label &&
+      !payload?.transcript_summary?.host_label &&
+      !payload?.heartbeat?.host_label
+    ) {
       return new Response("host_label is required", { status: 400 });
     }
-    if (!payload?.current_session?.user_label && !payload?.transcript_summary?.user_label) {
+    if (
+      !payload?.current_session?.user_label &&
+      !payload?.transcript_summary?.user_label &&
+      !payload?.heartbeat?.user_label
+    ) {
       return new Response("user_label is required", { status: 400 });
     }
 
