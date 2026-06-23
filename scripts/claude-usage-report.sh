@@ -300,6 +300,17 @@ if [[ -n "$ingest_url" ]]; then
     curl_args+=(-H "Authorization: Bearer ${CLAUDE_USAGE_INGEST_TOKEN}")
   fi
   curl "${curl_args[@]}" "$ingest_url" >/dev/null
+  sent_kinds=()
+  if [[ -n "$current_payload" ]]; then
+    sent_kinds+=("current_session")
+  fi
+  if [[ -n "$transcript_payload" ]]; then
+    sent_kinds+=("transcript_summary")
+  fi
+  if [[ -n "$heartbeat_payload" ]]; then
+    sent_kinds+=("heartbeat")
+  fi
+  echo "sent claude usage: ${sent_kinds[*]:-unknown} host_label=${host_label} user_label=${current_user}" >&2
 else
   printf '%s\n' "$payload"
 fi
