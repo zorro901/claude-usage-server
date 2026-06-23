@@ -1,0 +1,8 @@
+name = "claude-usage-ingest"
+main = "src/index.mjs"
+compatibility_date = "2026-06-23"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "claude_usage"
+database_id = "f7853ec3-fee0-4823-992f-5162b5d4e15e"

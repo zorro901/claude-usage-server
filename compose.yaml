@@ -1,0 +1,12 @@
+services:
+  claude-usage-report:
+    build: .
+    environment:
+      CLAUDE_USAGE_INGEST_URL: ${CLAUDE_USAGE_INGEST_URL:-}
+      CLAUDE_USAGE_INGEST_TOKEN: ${CLAUDE_USAGE_INGEST_TOKEN:-}
+      CLAUDE_USAGE_INTERVAL_SECONDS: ${CLAUDE_USAGE_INTERVAL_SECONDS:-300}
+      CLAUDE_USAGE_HOST_LABEL: ${CLAUDE_USAGE_HOST_LABEL:-}
+      CLAUDE_USAGE_USER_LABEL: ${CLAUDE_USAGE_USER_LABEL:-}
+    volumes:
+      - ${HOME}/.claude:/claude-home:ro
+      - ${HOME}/.claude-usage-state:/state
